@@ -27,9 +27,9 @@
             background-color: rgb(45, 52, 61);
         }
 
-        .form-control:focus {
-            background-color: rgb(45, 52, 61);
-        }
+            .form-control:focus {
+                background-color: rgb(45, 52, 61);
+            }
     </style>
 </head>
 <body>
@@ -38,7 +38,8 @@
             <a class="navbar-brand" href="#">AutoDoc</a>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Status
+                    <a class="nav-link" href="#">
+                        Status
                         <div class="spinner-grow spinner-grow-sm bg-success"></div>
                     </a>
                 </li>
@@ -49,26 +50,54 @@
         <h1>Jumbotron Example</h1>
         <p>Lorem ipsum...</p>
     </div>
-    <div class="container">
-        <div id="autodoc-ui" class="mt-4">
-            <h3>SampleHub</h3>
-            <div class="accordion" id="accordionExample">
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                            SendMessage Method
-                        </button>
-                    </h2>
-                    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
-                        <div class="accordion-body">
-                            <label for="comment" class="mb-2">Message:</label>
-                            <textarea class="form-control" rows="5" name="message"></textarea>
-                            <button onclick="Test()" type="button" class="btn btn-outline-success mt-4 mb-4">Execute</button>
-                            <br />
-                            <label for="comment" class="mb-2">Response:</label>
-                            <textarea class="form-control" rows="5" name="response"></textarea>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-6 mt-4">
+                <div id="autodoc-ui">
+                    <h3>SampleHub</h3>
+                    <div class="accordion" id="accordionExample">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    SendMessage Method
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    <label for="comment" class="mb-2">Message:</label>
+                                    <textarea class="form-control" rows="5" name="message" id="message"></textarea>
+                                    <button onclick="Test()" type="button" class="btn btn-outline-success mt-4 mb-4">Execute</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="col-6 mt-4">
+                <h3>Responses</h3>
+                <table class="table table-dark table-hover" id="ResponsesTable">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Time</th>
+                            <th>Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="responses">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="myModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Detail</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="body">
                 </div>
             </div>
         </div>
@@ -81,18 +110,30 @@
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/sample-hub")
             .build();
- 
+
         connection.on("OnConnected", (message) => {
-          
+
+        });
+
+        connection.on("ReceiveMessage", (message) => {
+            var tableRef = document.getElementById('ResponsesTable').getElementsByTagName('tbody')[0];
+            var row = "";
+            var time = Date.now();
+    var button = '<button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#myModal">Detail</button>';
+            row = "<tr><td>" + "ReceiveMessage" + "</td><td>" + time + "</td><td>" + button + "</td></tr>";
+
+            tableRef.insertRow().innerHTML = row;
+
+            document.getElementById('body').innerText = message;
         });
 
         connection.start().catch(err => console.error(err.toString()));
 
 
         function Test() {
-            connection.invoke('sendmessage', 'Testing123');
+            var message = document.getElementById("message").value;
+            connection.invoke('sendmessage', message);
         }
-       
     </script>
 </body>
 </html>
