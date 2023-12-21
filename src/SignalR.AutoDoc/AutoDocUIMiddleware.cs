@@ -1,22 +1,26 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Hosting;
 
 namespace SignalR.AutoDoc
 {
     internal class AutoDocUIMiddleware
     {
-        private readonly RequestDelegate _next;
+        private readonly StaticFileMiddleware _staticFileMiddleware;
 
-        public AutoDocUIMiddleware(RequestDelegate next)
+        public AutoDocUIMiddleware(RequestDelegate next,
+            IWebHostEnvironment hostingEnv,
+            ILoggerFactory loggerFactory)
         {
-            _next = next;
+            _staticFileMiddleware = CreateStaticFileMiddleware(next, hostingEnv, loggerFactory);
         }
 
         public async Task Invoke(HttpContext httpContext)
@@ -36,7 +40,21 @@ namespace SignalR.AutoDoc
                 return;
             }
 
-            await _next(httpContext);
+            await _staticFileMiddleware.Invoke(httpContext);
+        }
+
+        private StaticFileMiddleware CreateStaticFileMiddleware(
+        RequestDelegate next,
+        IWebHostEnvironment hostingEnv,
+        ILoggerFactory loggerFactory)
+        {
+            var staticFileOptions = new StaticFileOptions
+            {
+                RequestPath = "/autodoc",
+                FileProvider = new EmbeddedFileProvider(typeof(AutoDocUIMiddleware).GetTypeInfo().Assembly),
+            };
+
+            return new StaticFileMiddleware(next, hostingEnv, Options.Create(staticFileOptions), loggerFactory);
         }
 
         private void RespondWithRedirect(HttpResponse response, string location)
