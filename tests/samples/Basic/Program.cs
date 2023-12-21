@@ -1,8 +1,10 @@
+using Basic;
 using SignalR.AutoDoc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -11,5 +13,7 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 
 app.UseAutoDocUI();
+
+app.MapHub<SampleHub>("/sample-hub");
 
 app.Run();
